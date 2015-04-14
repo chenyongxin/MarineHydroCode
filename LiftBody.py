@@ -24,10 +24,10 @@ def make_circle(N):
 
     return circle
 
-N = 16
-circle = make_circle(N)  # set-up geom
-solve_gamma(circle)      # find gamma
-plot_flow(circle)        # plot the flow
+#N = 16
+#circle = make_circle(N)  # set-up geom
+#solve_gamma(circle)      # find gamma
+#plot_flow(circle)        # plot the flow
 
 def make_jukowski( N, dx = 0.2, dy = 0, dr = 0 ):
     # define the circle
@@ -51,28 +51,28 @@ def make_jukowski( N, dx = 0.2, dy = 0, dr = 0 ):
     
     return foil
 
-foil = make_jukowski(N)  # make foil
-solve_gamma(foil)        # solve for gamma
-plot_flow(foil)          # plot the flow
+#foil = make_jukowski(N)  # make foil
+#solve_gamma(foil)        # solve for gamma
+#plot_flow(foil)          # plot the flow
 def lift(panels):
     c = panels[0].x[0]-panels[len(panels)/2].x[0]      # length scale
     return -4./c*numpy.sum([p.gamma*p.S for p in panels])
-print 'C_L =',lift(foil)
+#print 'C_L =',lift(foil)
 
-alpha = numpy.pi/16         # set angle of attack
-solve_gamma(foil,alpha)     # solve for gamma
-plot_flow(foil,alpha)       # plot the flow
-print 'C_L =',lift(foil)    # print the lift
-
-alpha = 0                               # angle of attack
-dgamma = 0./(2*numpy.pi)                # vortex circulation
-N = 16                                  # number of panels
-
-circle = make_circle(N)                 # set-up geom
-solve_gamma(circle,alpha)               # find gamma
-for p in circle: p.gamma += dgamma      # increase gamma by dgamma
-plot_flow(circle,alpha)                 # plot the flow
-print 'C_L =',lift(circle)              # print the lift
+#alpha = numpy.pi/16         # set angle of attack
+#solve_gamma(foil,alpha)     # solve for gamma
+#plot_flow(foil,alpha)       # plot the flow
+#print 'C_L =',lift(foil)    # print the lift
+#
+#alpha = 0                               # angle of attack
+#dgamma = 0./(2*numpy.pi)                # vortex circulation
+#N = 16                                  # number of panels
+#
+#circle = make_circle(N)                 # set-up geom
+#solve_gamma(circle,alpha)               # find gamma
+#for p in circle: p.gamma += dgamma      # increase gamma by dgamma
+#plot_flow(circle,alpha)                 # plot the flow
+#print 'C_L =',lift(circle)              # print the lift
 
 # determine the vortex panel strength with Kutta Condition
 def solve_gamma_kutta(panels,alpha=0):
@@ -84,9 +84,9 @@ def solve_gamma_kutta(panels,alpha=0):
     for i,p_i in enumerate(panels):
         p_i.gamma = gamma[i]            # update panels
         
-N = 16
-alpha = numpy.pi/32
-foil = make_jukowski(N)             # make foil
-solve_gamma_kutta(foil,alpha)       # solve for gamma
-plot_flow(foil,alpha)               # plot the flow
-print 'C_L =',lift(foil)            # print the lift
+#N = 16
+#alpha = numpy.pi/32
+#foil = make_jukowski(N)             # make foil
+#solve_gamma_kutta(foil,alpha)       # solve for gamma
+#plot_flow(foil,alpha)               # plot the flow
+#print 'C_L =',lift(foil)            # print the lift
