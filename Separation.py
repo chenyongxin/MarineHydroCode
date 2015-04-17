@@ -139,4 +139,22 @@ def solve_plot_boundary_layers(panels,alpha=0,nu=1e-5):
 
 
 
-top,bottom = solve_plot_boundary_layers(circle)
+#top,bottom = solve_plot_boundary_layers(circle)
+
+def predict_jukowski_separation(t_c,alpha=0,N=128):
+    # set dx to gets the correct t/c
+    foil = make_jukowski(N,dx=t_c-0.019)
+
+    # find and print t/c
+    x0 = foil[N/2].xc
+    c = foil[0].xc-x0
+    t = 2.*numpy.max([p.yc for p in foil])
+    print "t/c = "+"%.3f"%(t/c)
+
+    # solve potential flow and boundary layer evolution
+    solve_gamma_kutta(foil,alpha)
+    top,bottom = solve_plot_boundary_layers(foil,alpha)
+
+    # print message
+    print ("Separation at x/c = "+"%.3f"%
+           ((top.x_sep-x0)/c)+" from the leading edge")
