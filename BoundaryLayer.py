@@ -40,7 +40,7 @@ def g_1(lam): return df_0(lam)-lam*(disp_ratio(lam)+2*mom_ratio(lam))
 
 from scipy.optimize import bisect
 lam0 = bisect(g_1,-12,12)         # use bisect method to find root between -12...12
-print 'lambda_0 = ',lam0
+#print 'lambda_0 = ',lam0
 
 def ddx_delta(Re_d,lam):
     if Re_d==0: return 0                     # Stagnation point condition

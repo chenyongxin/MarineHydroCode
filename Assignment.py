@@ -59,6 +59,10 @@ def CPplot(panels):
 
 
 
+#--------------------------
+#|    This is 1.1         |
+#--------------------------
+
 # define 3 different resolutions of circular cylinders and plot in the same figure.
 circle32 = new_make_circle(32)
 solve_gamma_kutta(circle32)
@@ -71,7 +75,7 @@ solve_gamma_kutta(circle128)
 
 pyplot.figure(figsize=(8,6))
 pyplot.ylabel(r"$C_P$",fontsize=16)
-pyplot.xlabel(r'$\theta$',fontsize=16)
+pyplot.xlabel(r'$\theta (rad)$',fontsize=16)
 # Notice the theta value and number here should changed following CPplot function 
 # because the range of theta in the figure is from 0 to pi
 pyplot.plot(numpy.linspace(0,2*numpy.pi,len(circle32))[0:len(circle32)/2],pressure(circle32)[0:len(circle32)/2],lw=2, c='c', label='$C_P--32$')
@@ -81,3 +85,38 @@ pyplot.plot(numpy.linspace(0,numpy.pi,180),1-4*numpy.sin(numpy.linspace(0,numpy.
 pyplot.legend(loc='lower right')
 
 
+#
+#--------------------------
+#|    This is 1.2         |
+#--------------------------
+#
+#from BoundaryLayer import ddx_delta, heun, g_pohl, g_1, df_0
+#
+## ODE solver, like march()
+#def findDelta(x,u_e,du_e,nu):
+#    lam0 = 7.05232310118
+#    delta0 = numpy.sqrt(lam0*nu/du_e[0])                # set delta0
+#    delta = numpy.full_like(x,delta0)                   # delta array
+#    lam = numpy.full_like(x,lam0)                       # lambda array
+#    
+#    for i in range(len(x)-2):                           # march!
+#        delta[i+1] = heun(g_pohl,delta[i],i,x[i+1]-x[i],# integrate BL using...
+#                             u_e,du_e,nu)
+#        lam[i+1] = delta[i+1]**2*du_e[i+1]/nu 
+#    return delta,lam
+#
+## solve the boundary thickness delta
+#nu = 1e-5                                   # viscosity, based on Reynolds number, nu = UR/Re
+#N = 128                                      # number of steps
+#circle = new_make_circle(N)
+#s = numpy.linspace(0,numpy.pi,N)            # distance goes from 0..pi
+#u_e = 2.*numpy.sin(s)                       # velocity
+#du_e = 2.*numpy.cos(s)                      # gradient
+#delta,lam = findDelta(s,u_e,du_e,nu)        # solve!
+#tau = nu*1000 *1/delta*df_0(lam)
+#
+## compute frictional drag. int tau ds, where ds is the lenght of vortex panel
+#def drag(tau, panels):
+#    return numpy.sum(tau*[p.S*2 for p in panels]*[p.sx for p in panels])
+#    
+#print 'drag coefficient = ', drag(tau,circle)/(1./2.*1000*1*numpy.pi)
