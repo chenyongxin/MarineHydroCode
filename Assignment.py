@@ -64,32 +64,32 @@ def CPplot(panels):
 #--------------------------
 
 # define 3 different resolutions of circular cylinders and plot in the same figure.
-circle32 = new_make_circle(32)
-solve_gamma_kutta(circle32)
-
-circle64 = new_make_circle(64)
-solve_gamma_kutta(circle64)
-
-circle128 = new_make_circle(128)
-solve_gamma_kutta(circle128)
-
-pyplot.figure(figsize=(8,6))
-pyplot.ylabel(r"$C_P$",fontsize=16)
-pyplot.xlabel(r'$\theta (rad)$',fontsize=16)
-# Notice the theta value and number here should changed following CPplot function 
-# because the range of theta in the figure is from 0 to pi
-pyplot.plot(numpy.linspace(0,2*numpy.pi,len(circle32))[0:len(circle32)/2],pressure(circle32)[0:len(circle32)/2],lw=2, c='c', label='$C_P--32$')
-pyplot.plot(numpy.linspace(0,2*numpy.pi,len(circle64))[0:len(circle64)/2],pressure(circle64)[0:len(circle64)/2],lw=2, c='b', label='$C_P--64$')
-pyplot.plot(numpy.linspace(0,2*numpy.pi,len(circle128))[0:len(circle128)/2],pressure(circle128)[0:len(circle128)/2],lw=2, c='r', label='$C_P--128$')
-pyplot.plot(numpy.linspace(0,numpy.pi,180),1-4*numpy.sin(numpy.linspace(0,numpy.pi,180))**2,lw=2, c='k', label='$C_P--exact$')
-pyplot.legend(loc='lower right')
-
-
+#circle32 = new_make_circle(32)
+#solve_gamma_kutta(circle32)
 #
+#circle64 = new_make_circle(64)
+#solve_gamma_kutta(circle64)
+#
+#circle128 = new_make_circle(128)
+#solve_gamma_kutta(circle128)
+#
+#pyplot.figure(figsize=(8,6))
+#pyplot.ylabel(r"$C_P$",fontsize=16)
+#pyplot.xlabel(r'$\theta (rad)$',fontsize=16)
+## Notice the theta value and number here should changed following CPplot function 
+## because the range of theta in the figure is from 0 to pi
+#pyplot.plot(numpy.linspace(0,2*numpy.pi,len(circle32))[0:len(circle32)/2],pressure(circle32)[0:len(circle32)/2],lw=2, c='c', label='$C_P--32$')
+#pyplot.plot(numpy.linspace(0,2*numpy.pi,len(circle64))[0:len(circle64)/2],pressure(circle64)[0:len(circle64)/2],lw=2, c='b', label='$C_P--64$')
+#pyplot.plot(numpy.linspace(0,2*numpy.pi,len(circle128))[0:len(circle128)/2],pressure(circle128)[0:len(circle128)/2],lw=2, c='r', label='$C_P--128$')
+#pyplot.plot(numpy.linspace(0,numpy.pi,180),1-4*numpy.sin(numpy.linspace(0,numpy.pi,180))**2,lw=2, c='k', label='$C_P--exact$')
+#pyplot.legend(loc='lower right')
+
+
+
 #--------------------------
 #|    This is 1.2         |
 #--------------------------
-#
+
 #from BoundaryLayer import ddx_delta, heun, g_pohl, g_1, df_0
 #
 ## ODE solver, like march()
@@ -113,10 +113,74 @@ pyplot.legend(loc='lower right')
 #u_e = 2.*numpy.sin(s)                       # velocity
 #du_e = 2.*numpy.cos(s)                      # gradient
 #delta,lam = findDelta(s,u_e,du_e,nu)        # solve!
-#tau = nu*1000 *1/delta*df_0(lam)
+#tau = nu*1000 *u_e/delta*df_0(lam)
 #
 ## compute frictional drag. int tau ds, where ds is the lenght of vortex panel
 #def drag(tau, panels):
 #    return numpy.sum(tau*[p.S*2 for p in panels]*[p.sx for p in panels])
 #    
 #print 'drag coefficient = ', drag(tau,circle)/(1./2.*1000*1*numpy.pi)
+
+
+#--------------------------
+#|    This is 2.1         |
+#--------------------------
+
+from LiftBody import make_jukowski, lift, jukowski_CL
+
+
+#N1, N2, N3 = 32, 64, 128    # define different resolution
+#foil1, foil2, foil3 = make_jukowski(N1), make_jukowski(N2), make_jukowski(N3)   # initialize foils with three resolutions
+#n = 10                                # this number is the division of AoA
+#alpha = numpy.linspace(0,1,n)         # set angle of attack which is a set of number from 0 to 10**0
+## define a loop to calculate lift coefficient
+#CL1, CL2, CL3 = numpy.empty(n), numpy.empty(n), numpy.empty(n) # initialize lift coefficient container
+#for i in range(n):
+#    solve_gamma_kutta(foil1,alpha[i])     # solve for gamma
+#    CL1[i] = lift(foil1)
+#
+#for i in range(n):
+#    solve_gamma_kutta(foil2,alpha[i])     # solve for gamma
+#    CL2[i] = lift(foil2)
+#
+#for i in range(n):
+#    solve_gamma_kutta(foil3,alpha[i])     # solve for gamma
+#    CL3[i] = lift(foil3)    
+#
+#pyplot.figure(figsize=(8,6))
+#pyplot.ylabel(r"$C_L$",fontsize=16)
+#pyplot.xlabel(r'AoA $\alpha (rad)$',fontsize=16)
+#pyplot.plot(alpha,CL1,lw=3, c='c', label='$C_L--32$')
+#pyplot.plot(alpha,CL2,lw=3, c='m', label='$C_L--64$')
+#pyplot.plot(alpha,CL3,lw=3, c='y', label='$C_L--128$')
+#pyplot.plot(alpha,jukowski_CL(alpha),lw=3, c='k', label='$C_L--exact$')
+#pyplot.legend(loc='lower right')
+
+from Separation import split_panels, solve_plot_boundary_layers
+
+def new_predict_jukowski_separation(t_c,alpha=0,N=128):
+    # set dx to gets the correct t/c
+    foil = make_jukowski(N,dx=t_c-0.019)
+
+    # find and print t/c
+    x0 = foil[N/2].xc
+    c = foil[0].xc-x0
+    t = 2.*numpy.max([p.yc for p in foil])
+    
+
+    # solve potential flow and boundary layer evolution
+    solve_gamma_kutta(foil,alpha)
+    top,bottom = solve_plot_boundary_layers(foil,alpha)
+    return (top.x_sep-x0)/c
+
+
+n = 10                                # this number is the division of AoA
+alpha = numpy.linspace(0,1,n) 
+sep = numpy.empty(n)
+for i in range(n):
+    sep[i] = new_predict_jukowski_separation(0.2,alpha[i])
+pyplot.figure(figsize=(8,6))
+pyplot.ylabel(r'Separation position x/c from the leading edge',fontsize=16)
+pyplot.xlabel(r'AoA $\alpha (rad)$',fontsize=16)
+pyplot.plot(alpha,sep,lw=3, c='c', label='Separation')
+pyplot.legend(loc='lower right')

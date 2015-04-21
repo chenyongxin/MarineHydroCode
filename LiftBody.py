@@ -90,3 +90,4 @@ def solve_gamma_kutta(panels,alpha=0):
 #solve_gamma_kutta(foil,alpha)       # solve for gamma
 #plot_flow(foil,alpha)               # plot the flow
 #print 'C_L =',lift(foil)            # print the lift
+def jukowski_CL(alpha,t_c=0.2+0.019): return 2*numpy.pi*(1+4/3/numpy.sqrt(3)*t_c)*numpy.sin(alpha)
