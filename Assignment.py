@@ -90,71 +90,103 @@ def CPplot(panels):
 #|    This is 1.2         |
 #--------------------------
 
-#from BoundaryLayer import ddx_delta, heun, g_pohl, g_1, df_0
-#
-## ODE solver, like march()
-#def findDelta(x,u_e,du_e,nu):
-#    lam0 = 7.05232310118
-#    delta0 = numpy.sqrt(lam0*nu/du_e[0])                # set delta0
-#    delta = numpy.full_like(x,delta0)                   # delta array
-#    lam = numpy.full_like(x,lam0)                       # lambda array
-#    
-#    for i in range(len(x)-2):                           # march!
-#        delta[i+1] = heun(g_pohl,delta[i],i,x[i+1]-x[i],# integrate BL using...
-#                             u_e,du_e,nu)
-#        lam[i+1] = delta[i+1]**2*du_e[i+1]/nu 
-#    return delta,lam
-#
-## solve the boundary thickness delta
-#nu = 1e-5                                   # viscosity, based on Reynolds number, nu = UR/Re
-#N = 128                                      # number of steps
-#circle = new_make_circle(N)
-#s = numpy.linspace(0,numpy.pi,N)            # distance goes from 0..pi
-#u_e = 2.*numpy.sin(s)                       # velocity
-#du_e = 2.*numpy.cos(s)                      # gradient
-#delta,lam = findDelta(s,u_e,du_e,nu)        # solve!
+from BoundaryLayer import ddx_delta, heun, g_pohl, g_1, df_0, march
+lam0 = 7.05232310118
+
+
+# ODE solver, like march()
+def findDelta(x,u_e,du_e,nu):
+    lam0 = 7.05232310118
+    delta0 = numpy.sqrt(lam0*nu/du_e[0])                # set delta0
+    delta = numpy.full_like(x,delta0)                   # delta array
+    lam = numpy.full_like(x,lam0)                       # lambda array
+    
+    for i in range(len(x)-1):                           # march!
+        delta[i+1] = heun(g_pohl,delta[i],i,x[i+1]-x[i],# integrate BL using...
+                             u_e,du_e,nu)
+        lam[i+1] = delta[i+1]**2*du_e[i+1]/nu 
+    return delta,lam
+
+# solve the boundary thickness delta
+nu = 1e-5                                   # viscosity, based on Reynolds number, nu = UR/Re
+N = 128                                      # number of steps
+s = numpy.linspace(0,numpy.pi,N)            # distance goes from 0..pi
+u_e = 2.*numpy.sin(s)                       # velocity
+du_e = 2.*numpy.cos(s)                      # gradient
+delta, lam, iSep = march(s,u_e,du_e,nu)     # solve!
+
 #tau = nu*1000 *u_e/delta*df_0(lam)
-#
-## compute frictional drag. int tau ds, where ds is the lenght of vortex panel
-#def drag(tau, panels):
-#    return numpy.trapz(tau*[p.sx for p in panels], dx = 2*numpy.pi*1/N)
-##    return numpy.sum(tau*[p.S*2 for p in panels]*[p.sx for p in panels])
-#    
+
+# compute frictional drag. int tau ds, where ds is the lenght of vortex panel
+
 #print 'drag coefficient = ', drag(tau,circle)/(1./2.*1000*1*numpy.pi)
+
+
+
+
+#def c_f(lam, nu, delta, u_e):
+#    Re_d = delta*u_e/nu
+#    return 2*df_0(lam)/Re_d
+    
+def half_c_f(lam, nu, delta, u_e):
+    Re_d = delta*u_e/nu
+    return df_0(lam)/Re_d
+    
+
+def tau_w(lam, nu, delta, u_e):
+    if u_e == 0: return 0
+    return half_c_f(lam, nu, delta, u_e)*u_e**2
+    
+#print tau_w(lam[0], nu, delta[0], u_e[0])
+tau = numpy.full_like(delta, 0)
+for i in range(iSep+1):
+    tau[i] = tau_w(lam[i], nu, delta[i], u_e[i])
+
+sx = numpy.sin(s[0:iSep])
+
+def drag(tau_w, sx, N):
+    return numpy.sum(tau_w[:iSep]*sx*numpy.pi/N)
+#    return numpy.trapz(tau_w[:iSep]*sx, dx = numpy.pi/N)
+
+
+#print(sx[0:iSep])
+# Notice: We just only compute half body, so in the end, we need to times 2 to get the whole cylinder's friction
+print 'drag coefficient = ', 2*drag(tau, sx, N)*2/numpy.pi
+
 
 
 #--------------------------
 #|    This is 2.1         |
 #--------------------------
 
-from LiftBody import make_jukowski, lift, jukowski_CL
-
-
-N1, N2, N3 = 32, 64, 128    # define different resolution
-foil1, foil2, foil3 = make_jukowski(N1), make_jukowski(N2), make_jukowski(N3)   # initialize foils with three resolutions
-n = 10                                # this number is the division of AoA
-alpha = numpy.linspace(0,10,n)         # set angle of attack which is a set of number from 0 to 10**0
-# define a loop to calculate lift coefficient
-CL1, CL2, CL3 = numpy.empty(n), numpy.empty(n), numpy.empty(n) # initialize lift coefficient container
-for i in range(n):
-    solve_gamma_kutta(foil1,alpha[i]/180*numpy.pi)     # solve for gamma
-    CL1[i] = lift(foil1)
-
-    solve_gamma_kutta(foil2,alpha[i]/180*numpy.pi)     # solve for gamma
-    CL2[i] = lift(foil2)
-
-    solve_gamma_kutta(foil3,alpha[i]/180*numpy.pi)     # solve for gamma
-    CL3[i] = lift(foil3)    
-
-
-pyplot.figure(figsize=(8,6))
-pyplot.ylabel(r"$C_L$",fontsize=16)
-pyplot.xlabel(r'AoA $\alpha (degree)$',fontsize=16)
-pyplot.plot(alpha,CL1,lw=3, c='c', label='$C_L--32$')
-pyplot.plot(alpha,CL2,lw=3, c='m', label='$C_L--64$')
-pyplot.plot(alpha,CL3,lw=3, c='y', label='$C_L--128$')
-pyplot.plot(alpha,jukowski_CL(alpha/180*numpy.pi,0.15),lw=3, c='k', label='$C_L--exact$')
-pyplot.legend(loc='lower right')
+#from LiftBody import make_jukowski, lift, jukowski_CL
+#
+#
+#N1, N2, N3 = 32, 64, 128    # define different resolution
+#foil1, foil2, foil3 = make_jukowski(N1), make_jukowski(N2), make_jukowski(N3)   # initialize foils with three resolutions
+#n = 10                                # this number is the division of AoA
+#alpha = numpy.linspace(0,10,n)         # set angle of attack which is a set of number from 0 to 10**0
+## define a loop to calculate lift coefficient
+#CL1, CL2, CL3 = numpy.empty(n), numpy.empty(n), numpy.empty(n) # initialize lift coefficient container
+#for i in range(n):
+#    solve_gamma_kutta(foil1,alpha[i]/180*numpy.pi)     # solve for gamma
+#    CL1[i] = lift(foil1)
+#
+#    solve_gamma_kutta(foil2,alpha[i]/180*numpy.pi)     # solve for gamma
+#    CL2[i] = lift(foil2)
+#
+#    solve_gamma_kutta(foil3,alpha[i]/180*numpy.pi)     # solve for gamma
+#    CL3[i] = lift(foil3)    
+#
+#
+#pyplot.figure(figsize=(8,6))
+#pyplot.ylabel(r"$C_L$",fontsize=16)
+#pyplot.xlabel(r'AoA $\alpha (degree)$',fontsize=16)
+#pyplot.plot(alpha,CL1,lw=3, c='c', label='$C_L--32$')
+#pyplot.plot(alpha,CL2,lw=3, c='m', label='$C_L--64$')
+#pyplot.plot(alpha,CL3,lw=3, c='y', label='$C_L--128$')
+#pyplot.plot(alpha,jukowski_CL(alpha/180*numpy.pi,0.15),lw=3, c='k', label='$C_L--exact$')
+#pyplot.legend(loc='lower right')
 
 
 
