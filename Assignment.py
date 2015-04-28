@@ -6,7 +6,7 @@ Created on Wed Apr 15 23:28:00 2015
 """
 
 import numpy
-import matplotlib.pyplot
+from matplotlib import pyplot
 from VortexPanel import Panel,plot_flow, flow_velocity
 from LiftBody import solve_gamma_kutta, make_jukowski
 # 1. A circular cylinder
@@ -117,7 +117,8 @@ def CPplot(panels):
 #
 ## compute frictional drag. int tau ds, where ds is the lenght of vortex panel
 #def drag(tau, panels):
-#    return numpy.sum(tau*[p.S*2 for p in panels]*[p.sx for p in panels])
+#    return numpy.trapz(tau*[p.sx for p in panels], dx = 2*numpy.pi*1/N)
+##    return numpy.sum(tau*[p.S*2 for p in panels]*[p.sx for p in panels])
 #    
 #print 'drag coefficient = ', drag(tau,circle)/(1./2.*1000*1*numpy.pi)
 
@@ -129,58 +130,62 @@ def CPplot(panels):
 from LiftBody import make_jukowski, lift, jukowski_CL
 
 
-#N1, N2, N3 = 32, 64, 128    # define different resolution
-#foil1, foil2, foil3 = make_jukowski(N1), make_jukowski(N2), make_jukowski(N3)   # initialize foils with three resolutions
-#n = 10                                # this number is the division of AoA
-#alpha = numpy.linspace(0,1,n)         # set angle of attack which is a set of number from 0 to 10**0
-## define a loop to calculate lift coefficient
-#CL1, CL2, CL3 = numpy.empty(n), numpy.empty(n), numpy.empty(n) # initialize lift coefficient container
-#for i in range(n):
-#    solve_gamma_kutta(foil1,alpha[i])     # solve for gamma
-#    CL1[i] = lift(foil1)
-#
-#for i in range(n):
-#    solve_gamma_kutta(foil2,alpha[i])     # solve for gamma
-#    CL2[i] = lift(foil2)
-#
-#for i in range(n):
-#    solve_gamma_kutta(foil3,alpha[i])     # solve for gamma
-#    CL3[i] = lift(foil3)    
-#
-#pyplot.figure(figsize=(8,6))
-#pyplot.ylabel(r"$C_L$",fontsize=16)
-#pyplot.xlabel(r'AoA $\alpha (rad)$',fontsize=16)
-#pyplot.plot(alpha,CL1,lw=3, c='c', label='$C_L--32$')
-#pyplot.plot(alpha,CL2,lw=3, c='m', label='$C_L--64$')
-#pyplot.plot(alpha,CL3,lw=3, c='y', label='$C_L--128$')
-#pyplot.plot(alpha,jukowski_CL(alpha),lw=3, c='k', label='$C_L--exact$')
-#pyplot.legend(loc='lower right')
-
-from Separation import split_panels, solve_plot_boundary_layers
-
-def new_predict_jukowski_separation(t_c,alpha=0,N=128):
-    # set dx to gets the correct t/c
-    foil = make_jukowski(N,dx=t_c-0.019)
-
-    # find and print t/c
-    x0 = foil[N/2].xc
-    c = foil[0].xc-x0
-    t = 2.*numpy.max([p.yc for p in foil])
-    
-
-    # solve potential flow and boundary layer evolution
-    solve_gamma_kutta(foil,alpha)
-    top,bottom = solve_plot_boundary_layers(foil,alpha)
-    return (top.x_sep-x0)/c
-
-
+N1, N2, N3 = 32, 64, 128    # define different resolution
+foil1, foil2, foil3 = make_jukowski(N1), make_jukowski(N2), make_jukowski(N3)   # initialize foils with three resolutions
 n = 10                                # this number is the division of AoA
-alpha = numpy.linspace(0,1,n) 
-sep = numpy.empty(n)
+alpha = numpy.linspace(0,10,n)         # set angle of attack which is a set of number from 0 to 10**0
+# define a loop to calculate lift coefficient
+CL1, CL2, CL3 = numpy.empty(n), numpy.empty(n), numpy.empty(n) # initialize lift coefficient container
 for i in range(n):
-    sep[i] = new_predict_jukowski_separation(0.2,alpha[i])
+    solve_gamma_kutta(foil1,alpha[i]/180*numpy.pi)     # solve for gamma
+    CL1[i] = lift(foil1)
+
+    solve_gamma_kutta(foil2,alpha[i]/180*numpy.pi)     # solve for gamma
+    CL2[i] = lift(foil2)
+
+    solve_gamma_kutta(foil3,alpha[i]/180*numpy.pi)     # solve for gamma
+    CL3[i] = lift(foil3)    
+
+
 pyplot.figure(figsize=(8,6))
-pyplot.ylabel(r'Separation position x/c from the leading edge',fontsize=16)
-pyplot.xlabel(r'AoA $\alpha (rad)$',fontsize=16)
-pyplot.plot(alpha,sep,lw=3, c='c', label='Separation')
+pyplot.ylabel(r"$C_L$",fontsize=16)
+pyplot.xlabel(r'AoA $\alpha (degree)$',fontsize=16)
+pyplot.plot(alpha,CL1,lw=3, c='c', label='$C_L--32$')
+pyplot.plot(alpha,CL2,lw=3, c='m', label='$C_L--64$')
+pyplot.plot(alpha,CL3,lw=3, c='y', label='$C_L--128$')
+pyplot.plot(alpha,jukowski_CL(alpha/180*numpy.pi,0.15),lw=3, c='k', label='$C_L--exact$')
 pyplot.legend(loc='lower right')
+
+
+
+#--------------------------
+#|    This is 2.2         |
+#--------------------------
+#from Separation import split_panels, solve_plot_boundary_layers
+#
+#def new_predict_jukowski_separation(t_c,alpha=0,N=128):
+#    # set dx to gets the correct t/c
+#    foil = make_jukowski(N,dx=t_c-0.019)
+#
+#    # find and print t/c
+#    x0 = foil[N/2].xc
+#    c = foil[0].xc-x0
+#    t = 2.*numpy.max([p.yc for p in foil])
+#    
+#
+#    # solve potential flow and boundary layer evolution
+#    solve_gamma_kutta(foil,alpha)
+#    top,bottom = solve_plot_boundary_layers(foil,alpha)
+#    return (top.x_sep-x0)/c
+#
+#
+#n = 10                                # this number is the division of AoA
+#alpha = numpy.linspace(0,1,n) 
+#sep = numpy.empty(n)
+#for i in range(n):
+#    sep[i] = new_predict_jukowski_separation(0.2,alpha[i])
+#pyplot.figure(figsize=(8,6))
+#pyplot.ylabel(r'Separation position x/c from the leading edge',fontsize=16)
+#pyplot.xlabel(r'AoA $\alpha (rad)$',fontsize=16)
+#pyplot.plot(alpha,sep,lw=3, c='c', label='Separation')
+#pyplot.legend(loc='lower right')
