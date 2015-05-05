@@ -90,69 +90,81 @@ def CPplot(panels):
 #|    This is 1.2         |
 #--------------------------
 
-from BoundaryLayer import ddx_delta, heun, g_pohl, g_1, df_0, march
-lam0 = 7.05232310118
-
-
-# ODE solver, like march()
-def findDelta(x,u_e,du_e,nu):
-    lam0 = 7.05232310118
-    delta0 = numpy.sqrt(lam0*nu/du_e[0])                # set delta0
-    delta = numpy.full_like(x,delta0)                   # delta array
-    lam = numpy.full_like(x,lam0)                       # lambda array
-    
-    for i in range(len(x)-1):                           # march!
-        delta[i+1] = heun(g_pohl,delta[i],i,x[i+1]-x[i],# integrate BL using...
-                             u_e,du_e,nu)
-        lam[i+1] = delta[i+1]**2*du_e[i+1]/nu 
-    return delta,lam
-
-# solve the boundary thickness delta
-nu = 1e-5                                   # viscosity, based on Reynolds number, nu = UR/Re
-N = 128                                      # number of steps
-s = numpy.linspace(0,numpy.pi,N)            # distance goes from 0..pi
-u_e = 2.*numpy.sin(s)                       # velocity
-du_e = 2.*numpy.cos(s)                      # gradient
-delta, lam, iSep = march(s,u_e,du_e,nu)     # solve!
-
-#tau = nu*1000 *u_e/delta*df_0(lam)
-
-# compute frictional drag. int tau ds, where ds is the lenght of vortex panel
-
-#print 'drag coefficient = ', drag(tau,circle)/(1./2.*1000*1*numpy.pi)
-
-
-
-
-#def c_f(lam, nu, delta, u_e):
+#from BoundaryLayer import ddx_delta, heun, g_pohl, g_1, df_0, march
+#lam0 = 7.05232310118
+#
+#
+## ODE solver, like march()
+#def findDelta(x,u_e,du_e,nu):
+#    lam0 = 7.05232310118
+#    delta0 = numpy.sqrt(lam0*nu/du_e[0])                # set delta0
+#    delta = numpy.full_like(x,delta0)                   # delta array
+#    lam = numpy.full_like(x,lam0)                       # lambda array
+#    
+#    for i in range(len(x)-1):                           # march!
+#        delta[i+1] = heun(g_pohl,delta[i],i,x[i+1]-x[i],# integrate BL using...
+#                             u_e,du_e,nu)
+#        lam[i+1] = delta[i+1]**2*du_e[i+1]/nu 
+#    return delta,lam
+#
+## solve the boundary thickness delta
+#nu = 1e-5                                   # viscosity, based on Reynolds number, nu = UR/Re
+#N = 32                                     # number of steps
+#s = numpy.linspace(0,numpy.pi,N)            # distance goes from 0..pi
+#u_e = 2.*numpy.sin(s)                       # velocity
+#du_e = 2.*numpy.cos(s)                      # gradient
+#delta, lam, iSep = march(s,u_e,du_e,nu)     # solve!
+#
+##tau = nu*1000 *u_e/delta*df_0(lam)
+#
+## compute frictional drag. int tau ds, where ds is the lenght of vortex panel
+#
+##print 'drag coefficient = ', drag(tau,circle)/(1./2.*1000*1*numpy.pi)
+#
+#
+#
+#
+##def c_f(lam, nu, delta, u_e):
+##    Re_d = delta*u_e/nu
+##    return 2*df_0(lam)/Re_d
+#    
+#def half_c_f(lam, nu, delta, u_e):
 #    Re_d = delta*u_e/nu
-#    return 2*df_0(lam)/Re_d
-    
-def half_c_f(lam, nu, delta, u_e):
-    Re_d = delta*u_e/nu
-    return df_0(lam)/Re_d
-    
-
-def tau_w(lam, nu, delta, u_e):
-    if u_e == 0: return 0
-    return half_c_f(lam, nu, delta, u_e)*u_e**2
-    
-#print tau_w(lam[0], nu, delta[0], u_e[0])
-tau = numpy.full_like(delta, 0)
-for i in range(iSep+1):
-    tau[i] = tau_w(lam[i], nu, delta[i], u_e[i])
-
-sx = numpy.sin(s[0:iSep])
-
-def drag(tau_w, sx, N):
-    return numpy.sum(tau_w[:iSep]*sx*numpy.pi/N)
-#    return numpy.trapz(tau_w[:iSep]*sx, dx = numpy.pi/N)
-
-
-#print(sx[0:iSep])
-# Notice: We just only compute half body, so in the end, we need to times 2 to get the whole cylinder's friction
-print 'drag coefficient = ', 2*drag(tau, sx, N)*2/numpy.pi
-
+#    return df_0(lam)/Re_d
+#    
+#
+#def tau_w(lam, nu, delta, u_e):
+#    if u_e == 0: return 0
+#    return half_c_f(lam, nu, delta, u_e)*u_e**2
+#    
+##print tau_w(lam[0], nu, delta[0], u_e[0])
+#tau = numpy.full_like(delta, 0)
+#for i in range(iSep+1):
+#    tau[i] = tau_w(lam[i], nu, delta[i], u_e[i])
+#
+#tau = [tau_w(lam[i], nu, delta[i], u_e[i]) for i in range(N)]
+#
+#
+#sx = numpy.sin(s[0:iSep+1])
+#
+#def drag(tau, sx, N):
+##    return numpy.sum(tau_w[:iSep]*sx*numpy.pi/N)
+#    return numpy.trapz(tau[:iSep+1]*sx, dx = numpy.pi/(N-1))
+#
+#
+##print(sx[0:iSep])
+## Notice: We just only compute half body, so in the end, we need to times 2 to get the whole cylinder's friction
+#C_F_circle = 2*drag(tau, sx, N)/numpy.pi
+#print ('Circle frictional coefficient = ' + '%0.2e' %C_F_circle)
+#
+#C_F_flat = 1.33 * numpy.sqrt(nu/numpy.pi)
+#print("Flate plate: "+'%0.2e' %C_F_flat)
+#
+#s_x = numpy.sin(s)
+#pyplot.plot(s, tau*s_x)
+#pyplot.scatter(s[iSep], tau[iSep]*s_x[iSep])
+#pyplot.xlabel('$s$',size=20)
+#pyplot.ylabel(r'$\tau_w s_x$', size=20)
 
 
 #--------------------------
