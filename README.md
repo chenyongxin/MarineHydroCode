@@ -1,3 +1,3 @@
-# MarineHydroCode
+# Numerical Hydrodynamics
 
-[Numerical Hydrodynamics] (http://nbviewer.ipython.org/github/chenyongxin/MarineHydroCode/blob/master/NumericalHydro.ipynb)
+[Numerical Hydrodynamics report] (http://nbviewer.ipython.org/github/chenyongxin/MarineHydroCode/blob/master/NumericalHydro.ipynb)
